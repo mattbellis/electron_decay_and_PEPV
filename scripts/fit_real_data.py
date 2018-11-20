@@ -15,20 +15,31 @@ import sys
 np.random.seed(0)
 
 ################################################################################
-def signal(pars, x, frange=None):
+def peak0(pars, x, frange=None):
 
-    mean = pars["signal"]["mean"].value
-    sigma = pars["signal"]["sigma"].value
+    mean = pars["peak0"]["mean"].value
+    sigma = pars["peak0"]["sigma"].value
 
     pdfvals = stats.norm(mean,sigma).pdf(x)
 
     return pdfvals
 ################################################################################
 ################################################################################
-def signal2(pars, x, frange=None):
+def peak1(pars, x, frange=None):
 
-    mean = pars["signal2"]["mean"].value
-    sigma = pars["signal2"]["sigma"].value
+    mean = pars["peak1"]["mean"].value
+    sigma = pars["peak1"]["sigma"].value
+
+    pdfvals = stats.norm(mean,sigma).pdf(x)
+
+    return pdfvals
+################################################################################
+
+################################################################################
+def peak2(pars, x, frange=None):
+
+    mean = pars["peak2"]["mean"].value
+    sigma = pars["peak2"]["sigma"].value
 
     pdfvals = stats.norm(mean,sigma).pdf(x)
 
@@ -39,7 +50,7 @@ def signal2(pars, x, frange=None):
 def background(x, frange=None):
 
     # Flat
-    print(frange)
+    #print(frange)
     height = 1.0/(frange[1] - frange[0])
 
     pdfvals = height*np.ones(len(x))
@@ -50,17 +61,19 @@ def background(x, frange=None):
 ################################################################################
 def pdf(pars,x,frange=None):
 
-    nsig = pars["signal"]["number"].value
-    nsig2 = pars["signal2"]["number"].value
+    npeak0 = pars["peak0"]["number"].value
+    npeak1 = pars["peak1"]["number"].value
+    npeak2 = pars["peak2"]["number"].value
     nbkg = pars["bkg"]["number"].value
 
-    ntot = float(nsig + nsig2 + nbkg)
+    ntot = float(npeak0 + npeak1 + npeak2 + nbkg)
 
-    sig = signal(pars,x,frange=frange)
-    sig2 = signal2(pars,x,frange=frange)
+    p0 = peak0(pars,x,frange=frange)
+    p1 = peak1(pars,x,frange=frange)
+    p2 = peak2(pars,x,frange=frange)
     bkg = background(x,frange=(8,12))
 
-    totpdf = (nsig/ntot)*sig + (nsig2/ntot)*sig2 +  (nbkg/ntot)*bkg
+    totpdf = (npeak0/ntot)*p0 + (npeak1/ntot)*p1 +  (npeak2/ntot)*p2 + (nbkg/ntot)*bkg
 
     return totpdf
 ################################################################################
@@ -69,9 +82,10 @@ def pdf(pars,x,frange=None):
 # Set up your parameters
 ################################################################################
 pars = {}
-pars["signal"] = {"number":Parameter(1000,(0,2000)), "mean":Parameter(9.5,(9.0,10.0)), "sigma":Parameter(0.1,(0.01,1.0))}
-pars["signal2"] = {"number":Parameter(500,(0,2000)), "mean":Parameter(10.5,(10.0,12.0)),  "sigma":Parameter(0.1,(0.01,1.0))}
-pars["bkg"] = {"number":Parameter(1000,(0,2000))}
+pars["peak0"] = {"number":Parameter(1000,(0,5000)), "mean":Parameter(8.9,(8.5,9.0)), "sigma":Parameter(0.1,(0.01,1.0))}
+pars["peak1"] = {"number":Parameter(500,(0,5000)), "mean":Parameter(9.7,(9.5,10.0)),  "sigma":Parameter(0.1,(0.01,1.0))}
+pars["peak2"] = {"number":Parameter(500,(0,10000)), "mean":Parameter(10.3,(10.0,11.0)),  "sigma":Parameter(0.1,(0.01,1.0))}
+pars["bkg"] = {"number":Parameter(1000,(0,10000))}
 
 ################################################################################
 
@@ -81,6 +95,9 @@ pars["bkg"] = {"number":Parameter(1000,(0,2000))}
 infilename = sys.argv[1]
 dataset = np.loadtxt(infilename,dtype='float',unpack=True)
 data = dataset[1]
+
+# Select a subset of the data
+data = data[(data>8)*(data<12)]
 #data += stats.norm(pars["signal2"]["mean"].value,pars["signal2"]["sigma"].value).rvs(size=500).tolist()
 #data += (10*np.random.random(1000)).tolist()
 
@@ -97,18 +114,21 @@ pretty_print_parameters(pars)
 xpts = np.linspace(8,12,1000)
 
 plt.figure()
-binwidth=(4/100)
-plt.hist(data,bins=100,range=(8,12),alpha=0.2)
-lch.hist_err(data,bins=100,range=(8,12),alpha=0.2)
+binwidth=(4/200)
+plt.hist(data,bins=200,range=(8,12),alpha=0.2)
+lch.hist_err(data,bins=200,range=(8,12),alpha=0.2)
 
-plt.show()
+#plt.show()
 
-exit()
+#exit()
 
-ysig = pars['signal']['number'].value*signal(pars,xpts) * binwidth
-plt.plot(xpts,ysig,linewidth=3)
+ysig0 = pars['peak0']['number'].value*peak0(pars,xpts) * binwidth
+plt.plot(xpts,ysig0,linewidth=3)
 
-ysig2 = pars['signal2']['number'].value*signal2(pars,xpts) * binwidth
+ysig1 = pars['peak1']['number'].value*peak1(pars,xpts) * binwidth
+plt.plot(xpts,ysig1,'--',linewidth=3)
+
+ysig2 = pars['peak2']['number'].value*peak2(pars,xpts) * binwidth
 plt.plot(xpts,ysig2,'--',linewidth=3)
 
 ybkg = pars['bkg']['number'].value*np.ones(len(xpts))/(12-8) * binwidth
