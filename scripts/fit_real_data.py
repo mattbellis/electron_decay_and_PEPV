@@ -47,6 +47,17 @@ def peak2(pars, x, frange=None):
 ################################################################################
 
 ################################################################################
+def peak3(pars, x, frange=None):
+
+    mean = pars["peak3"]["mean"].value
+    sigma = pars["peak3"]["sigma"].value
+
+    pdfvals = stats.norm(mean,sigma).pdf(x)
+
+    return pdfvals
+################################################################################
+
+################################################################################
 def background(x, frange=None):
 
     # Flat
@@ -64,16 +75,19 @@ def pdf(pars,x,frange=None):
     npeak0 = pars["peak0"]["number"].value
     npeak1 = pars["peak1"]["number"].value
     npeak2 = pars["peak2"]["number"].value
+    npeak3 = pars["peak3"]["number"].value
     nbkg = pars["bkg"]["number"].value
 
-    ntot = float(npeak0 + npeak1 + npeak2 + nbkg)
+    ntot = float(npeak0 + npeak1 + npeak2 + npeak3 + nbkg)
 
-    p0 = peak0(pars,x,frange=frange)
-    p1 = peak1(pars,x,frange=frange)
-    p2 = peak2(pars,x,frange=frange)
     bkg = background(x,frange=(8,12))
+    p0 = peak0(pars,x,frange=frange) 
+    p1 = peak1(pars,x,frange=frange) 
+    p2 = peak2(pars,x,frange=frange)
+    p3 = peak3(pars,x,frange=frange) 
 
-    totpdf = (npeak0/ntot)*p0 + (npeak1/ntot)*p1 +  (npeak2/ntot)*p2 + (nbkg/ntot)*bkg
+   
+    totpdf = (npeak0/ntot)*p0 + (npeak1/ntot)*p1 + (npeak2/ntot)*p2 + (npeak3/ntot)*p3  + (nbkg/ntot)*bkg
 
     return totpdf
 ################################################################################
@@ -81,11 +95,20 @@ def pdf(pars,x,frange=None):
 ################################################################################
 # Set up your parameters
 ################################################################################
+#Restricted 
 pars = {}
-pars["peak0"] = {"number":Parameter(1000,(0,5000)), "mean":Parameter(8.9,(8.5,9.0)), "sigma":Parameter(0.1,(0.01,1.0))}
-pars["peak1"] = {"number":Parameter(500,(0,5000)), "mean":Parameter(9.7,(9.5,10.0)),  "sigma":Parameter(0.1,(0.01,1.0))}
-pars["peak2"] = {"number":Parameter(500,(0,10000)), "mean":Parameter(10.3,(10.0,11.0)),  "sigma":Parameter(0.1,(0.01,1.0))}
-pars["bkg"] = {"number":Parameter(1000,(0,10000))}
+pars["peak0"] = {"number":Parameter(2250,(0,5000)), "mean":Parameter(8.9,(8.5,9.1)), "sigma":Parameter(0.25,(0.10,1))}
+pars["peak1"] = {"number":Parameter(600,(0,5000)), "mean":Parameter(9.7,(9.6,9.8)),  "sigma":Parameter(0.15,(0.05,.3))}
+pars["peak2"] = {"number":Parameter(2200,(0,10000)), "mean":Parameter(10.3,(10.1,10.32)),  "sigma":Parameter(0.05,(0.01,.08))}
+pars["peak3"] = {"number":Parameter(3400,(0,10000)), "mean":Parameter(10.39,(10.3,10.5)),  "sigma":Parameter(0.06,(0.01,.07))}
+pars["bkg"] = {"number":Parameter(3000,(0,10000))}
+#UnRestricted
+#pars = {}
+#pars["peak0"] = {"number":Parameter(2250,(0,5000)), "mean":Parameter(8.9,(8.5,9.1)), "sigma":Parameter(0.25,(0.10,1))}
+#pars["peak1"] = {"number":Parameter(600,(0,5000)), "mean":Parameter(9.7,(9.6,9.8)),  "sigma":Parameter(0.15,(0.05,.3))}
+##pars["peak2"] = {"number":Parameter(2200,(0,10000)), "mean":Parameter(10.33,(10.1,10.36)),  "sigma":Parameter(0.05,(0.01,.2))}
+#pars["peak3"] = {"number":Parameter(3400,(0,10000)), "mean":Parameter(10.39,(10.3,10.5)),  "sigma":Parameter(0.06,(0.01,.1))}
+#pars["bkg"] = {"number":Parameter(3000,(0,10000))}
 
 ################################################################################
 
@@ -131,11 +154,15 @@ plt.plot(xpts,ysig1,'--',linewidth=3)
 ysig2 = pars['peak2']['number'].value*peak2(pars,xpts) * binwidth
 plt.plot(xpts,ysig2,'--',linewidth=3)
 
+ysig3 = pars['peak3']['number'].value*peak3(pars,xpts) * binwidth
+plt.plot(xpts,ysig3,'--',linewidth=3)
+
 ybkg = pars['bkg']['number'].value*np.ones(len(xpts))/(12-8) * binwidth
 plt.plot(xpts,ybkg,'-.',linewidth=3)
 
 ##plt.plot(xpts,ybkg + ysig,linewidth=3)
 ntot = sum(get_numbers(pars))
+print(ntot)
 ytot = ntot*pdf(pars,xpts,frange=(8,12)) * binwidth
 plt.plot(xpts,ytot,linewidth=3,color='k')
 
