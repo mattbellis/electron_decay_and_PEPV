@@ -101,9 +101,8 @@ binwidth=(4/100)
 plt.hist(data,bins=100,range=(8,12),alpha=0.2)
 lch.hist_err(data,bins=100,range=(8,12),alpha=0.2)
 
-plt.show()
-
-exit()
+#plt.show()
+#exit()
 
 ysig = pars['signal']['number'].value*signal(pars,xpts) * binwidth
 plt.plot(xpts,ysig,linewidth=3)
