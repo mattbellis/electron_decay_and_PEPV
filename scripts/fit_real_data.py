@@ -126,7 +126,7 @@ data = data[(data>8)*(data<12)]
 
 #print(data)
 
-initvals,finalvals = fit_emlm(pdf,pars,data)
+initvals,finalvals = fit_emlm(pdf,pars,[data])
 print("Done with fit!")
 pretty_print_parameters(pars)
 

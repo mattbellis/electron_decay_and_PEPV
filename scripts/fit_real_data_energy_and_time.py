@@ -25,7 +25,7 @@ np.random.seed(0)
 LN2 = np.log(2)
 
 ################################################################################
-def peak(pars, x, frange=None, key=None):
+def peak(pars, x, frange=None, key=None,subnormranges=None):
 
     mean = pars[key]["mean"].value
     sigma = pars[key]["sigma"].value
@@ -75,7 +75,7 @@ def pdf(pars,x,frange=None):
     nbkg = pars["bkg"]["number"].value
 
     ntot = float(npeak0 + npeak1 + npeak2 + npeak3 + npeak4 + nbkg)
-    print("ntot: ",ntot)
+    #print("ntot: ",ntot)
 
     bkg = background(x,frange=(8,12))[0]
     p0 = peak(pars,x,frange=(0,1238),key="peak0")[0]
@@ -94,12 +94,12 @@ def pdf(pars,x,frange=None):
 ################################################################################
 #Restricted 
 pars = {}
-pars["peak0"] = {"number":Parameter(2250,(1800,5000)), "mean":Parameter(8.9,(8.8,9.0)), "sigma":Parameter(0.14,(0.10,1)), "lifetime":Parameter(244/LN2,(243/LN2,245/LN2))}
-pars["peak1"] = {"number":Parameter(600,(500,5000)), "mean":Parameter(9.7,(9.6,9.8)),  "sigma":Parameter(0.10,(0.05,.15)), "lifetime":Parameter(271/LN2,(270/LN2,272/LN2))}
-pars["peak2"] = {"number":Parameter(2200,(2000,10000)), "mean":Parameter(10.3,(10.1,10.32)),  "sigma":Parameter(0.08,(0.01,.09)), "lifetime":Parameter(271/LN2,(270/LN2,272/LN2))}
-pars["peak3"] = {"number":Parameter(3400,(2000,10000)), "mean":Parameter(10.39,(10.3,10.5)),  "sigma":Parameter(0.08,(0.01,.09)), "lifetime":Parameter(271/LN2,(270/LN2,272/LN2))}
-pars["peak4"] = {"number":Parameter(50,(2,10000)), "mean":Parameter(11.10,(11.0,11.2)),  "sigma":Parameter(0.08,(0.01,.15)), "lifetime":Parameter(80/LN2,(79/LN2,81/LN2))}
-pars["bkg"] = {"number":Parameter(3000,(0,10000))}
+pars["peak0"] = {"number":Parameter(2250,(1800,2300)), "mean":Parameter(8.9,(8.8,9.0)), "sigma":Parameter(0.135,(0.10,1)), "lifetime":Parameter(244/LN2,None)}
+pars["peak1"] = {"number":Parameter(600,(500,800)), "mean":Parameter(9.7,(9.6,9.8)),  "sigma":Parameter(0.097,(0.05,.15)), "lifetime":Parameter(271/LN2,None)}
+pars["peak2"] = {"number":Parameter(2200,(2000,10000)), "mean":Parameter(10.3,(10.1,10.32)),  "sigma":Parameter(0.078,(0.01,.15)), "lifetime":Parameter(271/LN2,None)}
+pars["peak3"] = {"number":Parameter(3400,(2000,10000)), "mean":Parameter(10.39,(10.3,10.5)),  "sigma":Parameter(0.08,(0.01,.15)), "lifetime":Parameter(271/LN2,None)}
+pars["peak4"] = {"number":Parameter(50,(2,10000)), "mean":Parameter(11.10,(11.0,11.2)),  "sigma":Parameter(0.08,(0.01,.15)), "lifetime":Parameter(80/LN2,None)}
+pars["bkg"] = {"number":Parameter(2900,(2000,10000))}
 #UnRestricted
 #pars = {}
 #pars["peak0"] = {"number":Parameter(2250,(0,5000)), "mean":Parameter(8.9,(8.5,9.1)), "sigma":Parameter(0.25,(0.10,1))}
@@ -122,11 +122,24 @@ tdays = (dataset[0]-first_event)/(24.0*3600.0) + 1.0
 
 # Select a subset of the data
 idx = (energy>8)*(energy<12)
+tidx = np.zeros(len(tdays),dtype=bool)
+# Cut out the subranges, just to be sure
+#subnormranges = [[600,1238]]
+for sr in subnormranges:
+    print(sr)
+    tidx += (tdays>sr[0])*(tdays<sr[1])
+    print(len(tidx[tidx]))
+idx *= tidx
 tdays = tdays[idx]
 energy = energy[idx]
 data = [energy,tdays]
 #print(max(tdays))
-#print(len(tdays))
+print("# events: {0}".format(len(tdays)))
+#exit()
+
+plt.figure()
+plt.plot(energy,tdays,'.',alpha=0.3)
+#plt.show()
 #exit()
 
 ############## 3D PLOTS ####################################
