@@ -25,6 +25,16 @@ np.random.seed(0)
 LN2 = np.log(2)
 
 ################################################################################
+def gaus(x,mean,sigma):
+
+    a = 1.0/np.sqrt(2*np.pi*sigma*sigma)
+    b = (x-mean)
+    c = b*b
+    d = 2.0*sigma*sigma
+    return a*np.exp(-c/d)
+
+
+################################################################################
 def peak(pars, x, frange=None, key=None,subnormranges=None):
 
     mean = pars[key]["mean"].value
@@ -65,6 +75,30 @@ def background(x, frange=None):
 ################################################################################
 
 ################################################################################
+def gaussian_constraints(pars):
+
+    lifetime0 = pars["peak0"]["lifetime"].value
+    lifetime1 = pars["peak1"]["lifetime"].value
+    lifetime2 = pars["peak2"]["lifetime"].value
+    lifetime3 = pars["peak3"]["lifetime"].value
+    lifetime4 = pars["peak3"]["lifetime"].value
+
+    lifetime0_opt = pars["peak0"]["lifetime0"].value
+    lifetime1_opt = pars["peak1"]["lifetime0"].value
+    lifetime2_opt = pars["peak2"]["lifetime0"].value
+    lifetime3_opt = pars["peak3"]["lifetime0"].value
+    lifetime4_opt = pars["peak3"]["lifetime0"].value
+
+    extra_constraints = 0.0
+    extra_constraints += np.log(gaus(lifetime0,lifetime0_opt,0.01*lifetime0_opt))
+    extra_constraints += np.log(gaus(lifetime1,lifetime1_opt,0.01*lifetime1_opt))
+    extra_constraints += np.log(gaus(lifetime2,lifetime2_opt,0.01*lifetime2_opt))
+    extra_constraints += np.log(gaus(lifetime3,lifetime3_opt,0.01*lifetime3_opt))
+    extra_constraints += np.log(gaus(lifetime4,lifetime4_opt,0.01*lifetime4_opt))
+
+    return extra_constraints
+
+################################################################################
 def pdf(pars,x,frange=None):
 
     npeak0 = pars["peak0"]["number"].value
@@ -94,11 +128,11 @@ def pdf(pars,x,frange=None):
 ################################################################################
 #Restricted 
 pars = {}
-pars["peak0"] = {"number":Parameter(2250,(1800,2300)), "mean":Parameter(8.9,(8.8,9.0)), "sigma":Parameter(0.135,(0.10,1)), "lifetime":Parameter(244/LN2,None)}
-pars["peak1"] = {"number":Parameter(600,(500,800)), "mean":Parameter(9.7,(9.6,9.8)),  "sigma":Parameter(0.097,(0.05,.15)), "lifetime":Parameter(271/LN2,None)}
-pars["peak2"] = {"number":Parameter(2200,(2000,10000)), "mean":Parameter(10.3,(10.1,10.32)),  "sigma":Parameter(0.078,(0.01,.15)), "lifetime":Parameter(271/LN2,None)}
-pars["peak3"] = {"number":Parameter(3400,(2000,10000)), "mean":Parameter(10.39,(10.3,10.5)),  "sigma":Parameter(0.08,(0.01,.15)), "lifetime":Parameter(271/LN2,None)}
-pars["peak4"] = {"number":Parameter(50,(2,10000)), "mean":Parameter(11.10,(11.0,11.2)),  "sigma":Parameter(0.08,(0.01,.15)), "lifetime":Parameter(80/LN2,None)}
+pars["peak0"] = {"number":Parameter(2250,(1800,2300)), "mean":Parameter(8.9,(8.8,9.0)), "sigma":Parameter(0.135,(0.10,1)), "lifetime":Parameter(244/LN2,(0.8*244/LN2,1.2*244/LN2)), "lifetime0":Parameter(244/LN2,None)}
+pars["peak1"] = {"number":Parameter(600,(500,800)), "mean":Parameter(9.7,(9.6,9.8)),  "sigma":Parameter(0.097,(0.05,.15)), "lifetime":Parameter(271/LN2,(0.8*271/LN2,1.2*271/LN2)), "lifetime0":Parameter(271/LN2,None)}
+pars["peak2"] = {"number":Parameter(2200,(2000,10000)), "mean":Parameter(10.3,(10.1,10.32)),  "sigma":Parameter(0.078,(0.01,.15)), "lifetime":Parameter(271/LN2,(0.8*271/LN2,1.2*271/LN2)), "lifetime0":Parameter(271/LN2,None)}
+pars["peak3"] = {"number":Parameter(3400,(2000,10000)), "mean":Parameter(10.39,(10.3,10.5)),  "sigma":Parameter(0.08,(0.01,.15)), "lifetime":Parameter(271/LN2,(0.8*271/LN2,1.2*271/LN2)), "lifetime0":Parameter(271/LN2,None)}
+pars["peak4"] = {"number":Parameter(50,(2,10000)), "mean":Parameter(11.10,(11.0,11.2)),  "sigma":Parameter(0.08,(0.01,.15)), "lifetime":Parameter(80/LN2,(0.8*80/LN2,1.2*80/LN2)), "lifetime0":Parameter(80/LN2,None)}
 pars["bkg"] = {"number":Parameter(2900,(2000,10000))}
 #UnRestricted
 #pars = {}
@@ -117,6 +151,7 @@ infilename = sys.argv[1]
 dataset = np.loadtxt(infilename,dtype='float',unpack=True)
 energy = dataset[1]
 tdays = (dataset[0]-first_event)/(24.0*3600.0) + 1.0
+risetime = dataset[2]
 
 #print(tdays)
 
@@ -130,6 +165,7 @@ for sr in subnormranges:
     tidx += (tdays>sr[0])*(tdays<sr[1])
     print(len(tidx[tidx]))
 idx *= tidx
+idx *= risetime<0.5 # Take only fast risetime events
 tdays = tdays[idx]
 energy = energy[idx]
 data = [energy,tdays]
@@ -141,6 +177,9 @@ plt.figure()
 plt.plot(energy,tdays,'.',alpha=0.3)
 #plt.show()
 #exit()
+
+plt.figure()
+plt.hist(risetime[idx],bins=100)
 
 ############## 3D PLOTS ####################################
 #X,Y = np.meshgrid(np.linspace(min(energy),max(energy),25),np.linspace(min(tdays),max(tdays),25))
@@ -188,8 +227,11 @@ print(tmppeak(tdays,energy,pars))
 
 
 
-initvals,finalvals = fit_emlm(pdf,pars,data,verbose=True)
+initvals,full_dict = fit_emlm(pdf,pars,data,verbose=True,constraints=gaussian_constraints)
+finalvals = full_dict[0]
 print("Done with fit!")
+print(full_dict[2])
+print()
 pretty_print_parameters(pars)
 
 ################################################################################
