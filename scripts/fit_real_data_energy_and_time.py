@@ -10,7 +10,7 @@ from scipy.optimize import approx_fprime,fmin_bfgs
 from scipy.integrate import dblquad
 
 from lichen.fit import Parameter,get_numbers,reset_parameters,pois,errfunc,pretty_print_parameters,get_values_and_bounds,fit_emlm
-import lichen.lichen as lch
+import lichen as lch
 import lichen.pdfs as pdfs
 
 import numpy as np
@@ -245,12 +245,12 @@ plt.figure(figsize=(12,5))
 plt.subplot(1,2,1)
 binwidth=(4/200)
 plt.hist(data[0],bins=200,range=(8,12),alpha=0.2)
-lch.hist_err(data[0],bins=200,range=(8,12),alpha=0.2)
+lch.hist(data[0],bins=200,range=(8,12),alpha=0.2)
 
 plt.subplot(1,2,2)
 binwidth=(1238/200)
 plt.hist(data[1],bins=200,range=(0,1238),alpha=0.2)
-lch.hist_err(data[1],bins=200,range=(0,1238),alpha=0.2)
+lch.hist(data[1],bins=200,range=(0,1238),alpha=0.2)
 #plt.show()
 
 #exit()
