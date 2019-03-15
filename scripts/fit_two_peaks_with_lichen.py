@@ -6,7 +6,7 @@ import scipy.stats as stats
 from scipy.optimize import approx_fprime,fmin_bfgs
 
 from lichen.fit import Parameter,get_numbers,reset_parameters,pois,errfunc,pretty_print_parameters,get_values_and_bounds,fit_emlm
-import lichen.lichen as lch
+import lichen as lch
 
 import numpy as np
 
@@ -99,11 +99,10 @@ xpts = np.linspace(8,12,1000)
 plt.figure()
 binwidth=(4/100)
 plt.hist(data,bins=100,range=(8,12),alpha=0.2)
-lch.hist_err(data,bins=100,range=(8,12),alpha=0.2)
+lch.hist(data,bins=100,range=(8,12),alpha=0.2)
 
-plt.show()
-
-exit()
+#plt.show()
+#exit()
 
 ysig = pars['signal']['number'].value*signal(pars,xpts) * binwidth
 plt.plot(xpts,ysig,linewidth=3)
