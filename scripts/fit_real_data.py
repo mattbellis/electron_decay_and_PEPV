@@ -115,7 +115,7 @@ pars["bkg"] = {"number":Parameter(3000,(0,10000))}
 ################################################################################
 # Read in
 ################################################################################
-infilename = sys.argv[1]
+infilename = "../data/HE.txt"
 dataset = np.loadtxt(infilename,dtype='float',unpack=True)
 data = dataset[1]
 
