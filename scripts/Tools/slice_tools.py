@@ -8,13 +8,25 @@ from scipy import asarray as ar,exp
 infilename = '../electron_decay_and_PEPV/data/HE.txt'
 dataset = np.loadtxt(infilename,dtype='float',unpack=True)
 energy = dataset[1]
-time = dataset[0]
+time = dataset[0] / 60 / 60 / 24
 
 
 # Data -> array you would like to split
 # numSlices -> number of intervals the data will be split into
 # function returns a list of arrays of the Data, in even
 #       intervals. Defaults to 10
+
+
+
+def limit_data(arr1, arr2,  low, high):
+    tempE = []
+    tempT = []
+    for i in range(0,len(arr1)):
+        if(arr1[i]>low and arr1[i]<high):
+            tempE.append(arr1[i])
+            tempT.append(arr2[i])
+    return tempE, tempT
+
 def create_slices(Data, numSlices=10):
     tot = len(Data)
     interval = tot/numSlices
@@ -28,12 +40,12 @@ def create_slices(Data, numSlices=10):
         Slices.append(temp)
     return Slices
 
-def slice_at_energy(time,energy, energy_level):
-    tot = len(time)
+def slice_at_value(arr1,arr2, value, threshold=.2):
+    tot = len(arr1)
     temp = []
     for i in range(0,tot):
-        if(np.abs(energy[i]-energy_level)<.2):
-            temp.append(time[i])
+        if(np.abs(arr2[i]-value)<threshold):
+            temp.append(arr1[i])
     return temp
 
 # arr -> List of slices, can be obtained from create_slices
@@ -64,9 +76,16 @@ def fit_exponential(arr, initial, bins=100):
     return [popt, pcov]
 
 
+def hflife_convert(hlorlambda):
+    return np.log(2)/hlorlambda
 
+def time_v_energy_plot(nbins=100, x1=8, x2=12):
+    newEnergy, newTime = limit_data(energy, time, x1, x2)
+    fig, ax = plt.subplots()
+    counts, xedges, yedges, im = ax.hist2d(newEnergy, newTime, bins=nbins)
+    plt.colorbar(im, ax=ax)
+    plt.xlabel('Energy (kEv)')
+    plt.ylabel('Time (days)')
+    plt.title('Time vs Energy')
+    plt.show()
 
-
-
-
-    
