@@ -12,6 +12,7 @@ import numpy as np
 
 import sys
 
+first_event = 2750361.2
 np.random.seed(0)
 
 ################################################################################
@@ -101,7 +102,7 @@ pars["peak0"] = {"number":Parameter(2250,(0,5000)), "mean":Parameter(8.9,(8.5,9.
 pars["peak1"] = {"number":Parameter(600,(0,5000)), "mean":Parameter(9.7,(9.6,9.8)),  "sigma":Parameter(0.15,(0.05,.3))}
 pars["peak2"] = {"number":Parameter(2200,(0,10000)), "mean":Parameter(10.3,(10.1,10.32)),  "sigma":Parameter(0.05,(0.01,.08))}
 pars["peak3"] = {"number":Parameter(3400,(0,10000)), "mean":Parameter(10.39,(10.3,10.5)),  "sigma":Parameter(0.06,(0.01,.07))}
-pars["bkg"] = {"number":Parameter(3000,(0,10000))}
+pars["bkg"] = {"number":Parameter(3100,(0,10000))}
 #UnRestricted
 #pars = {}
 #pars["peak0"] = {"number":Parameter(2250,(0,5000)), "mean":Parameter(8.9,(8.5,9.1)), "sigma":Parameter(0.25,(0.10,1))}
@@ -118,15 +119,16 @@ pars["bkg"] = {"number":Parameter(3000,(0,10000))}
 infilename = sys.argv[1]
 dataset = np.loadtxt(infilename,dtype='float',unpack=True)
 data = dataset[1]
+tdays = (dataset[0]-first_event)/(24.0*3600.0) + 1.0
 
 # Select a subset of the data
-data = data[(data>8)*(data<12)]
+data = data[(data>8)*(data<12)*tdays>0]
 #data += stats.norm(pars["signal2"]["mean"].value,pars["signal2"]["sigma"].value).rvs(size=500).tolist()
 #data += (10*np.random.random(1000)).tolist()
 
 #print(data)
 
-initvals,finalvals = fit_emlm(pdf,pars,[data])
+initvals,finalvals = fit_emlm(pdf,pars,[data],verbose=True)
 print("Done with fit!")
 pretty_print_parameters(pars)
 
