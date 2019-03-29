@@ -42,7 +42,7 @@ def peak(pars, x, frange=None, key=None,subnormranges=None):
     lifetime = pars[key]["lifetime"].value
     #print(lifetime)
 
-    rv = stats.expon(scale=lifetime)
+    rv = stats.expon(scale=lifetime/LN2)
     pdftime,xnorm = pdfs.nnf(rv,normrange=frange,data=x[1],subnormranges=subnormranges)
 
     pdfenergy = stats.norm(mean,sigma).pdf(x[0])
@@ -66,7 +66,7 @@ def background(x, frange=None):
     delta = 0.0
     for sr in subnormranges:
         delta += sr[1]-sr[0]
-    height1 = 1/delta
+    height1 = 1./delta
 
     xpts = np.ones(len(x[0]))
     pdfvals = height0*height1*xpts
@@ -90,11 +90,11 @@ def gaussian_constraints(pars):
     lifetime4_opt = pars["peak3"]["lifetime0"].value
 
     extra_constraints = 0.0
-    extra_constraints += np.log(gaus(lifetime0,lifetime0_opt,0.01*lifetime0_opt))
-    extra_constraints += np.log(gaus(lifetime1,lifetime1_opt,0.01*lifetime1_opt))
-    extra_constraints += np.log(gaus(lifetime2,lifetime2_opt,0.01*lifetime2_opt))
-    extra_constraints += np.log(gaus(lifetime3,lifetime3_opt,0.01*lifetime3_opt))
-    extra_constraints += np.log(gaus(lifetime4,lifetime4_opt,0.01*lifetime4_opt))
+    extra_constraints += np.log(gaus(lifetime0,lifetime0_opt,0.05*lifetime0_opt))
+    extra_constraints += np.log(gaus(lifetime1,lifetime1_opt,0.05*lifetime1_opt))
+    extra_constraints += np.log(gaus(lifetime2,lifetime2_opt,0.05*lifetime2_opt))
+    extra_constraints += np.log(gaus(lifetime3,lifetime3_opt,0.05*lifetime3_opt))
+    extra_constraints += np.log(gaus(lifetime4,lifetime4_opt,0.05*lifetime4_opt))
 
     return extra_constraints
 
@@ -128,12 +128,12 @@ def pdf(pars,x,frange=None):
 ################################################################################
 #Restricted 
 pars = {}
-pars["peak0"] = {"number":Parameter(2250,(1800,2300)), "mean":Parameter(8.9,(8.8,9.0)), "sigma":Parameter(0.135,(0.10,1)), "lifetime":Parameter(244/LN2,(0.8*244/LN2,1.2*244/LN2)), "lifetime0":Parameter(244/LN2,None)}
-pars["peak1"] = {"number":Parameter(600,(500,800)), "mean":Parameter(9.7,(9.6,9.8)),  "sigma":Parameter(0.097,(0.05,.15)), "lifetime":Parameter(271/LN2,(0.8*271/LN2,1.2*271/LN2)), "lifetime0":Parameter(271/LN2,None)}
-pars["peak2"] = {"number":Parameter(2200,(2000,10000)), "mean":Parameter(10.3,(10.1,10.32)),  "sigma":Parameter(0.078,(0.01,.15)), "lifetime":Parameter(271/LN2,(0.8*271/LN2,1.2*271/LN2)), "lifetime0":Parameter(271/LN2,None)}
-pars["peak3"] = {"number":Parameter(3400,(2000,10000)), "mean":Parameter(10.39,(10.3,10.5)),  "sigma":Parameter(0.08,(0.01,.15)), "lifetime":Parameter(271/LN2,(0.8*271/LN2,1.2*271/LN2)), "lifetime0":Parameter(271/LN2,None)}
-pars["peak4"] = {"number":Parameter(50,(2,10000)), "mean":Parameter(11.10,(11.0,11.2)),  "sigma":Parameter(0.08,(0.01,.15)), "lifetime":Parameter(80/LN2,(0.8*80/LN2,1.2*80/LN2)), "lifetime0":Parameter(80/LN2,None)}
-pars["bkg"] = {"number":Parameter(2900,(2000,10000))}
+pars["peak0"] = {"number":Parameter(2250,(1800,2300)), "mean":Parameter(8.9,(8.8,9.0)), "sigma":Parameter(0.135,(0.10,1)), "lifetime":Parameter(244,(0.8*244,1.2*244)), "lifetime0":Parameter(244,None)}
+pars["peak1"] = {"number":Parameter(600,(500,800)), "mean":Parameter(9.7,(9.6,9.8)),  "sigma":Parameter(0.097,(0.05,.15)), "lifetime":Parameter(271,(0.8*271,1.2*271)), "lifetime0":Parameter(271,None)}
+pars["peak2"] = {"number":Parameter(2200,(2000,10000)), "mean":Parameter(10.3,(10.1,10.32)),  "sigma":Parameter(0.078,(0.01,.15)), "lifetime":Parameter(271,(0.8*271,1.2*271)), "lifetime0":Parameter(271,None)}
+pars["peak3"] = {"number":Parameter(3400,(2000,10000)), "mean":Parameter(10.39,(10.3,10.5)),  "sigma":Parameter(0.08,(0.01,.15)), "lifetime":Parameter(271,(0.8*271,1.2*271)), "lifetime0":Parameter(271,None)}
+pars["peak4"] = {"number":Parameter(50,(2,10000)), "mean":Parameter(11.10,(11.0,11.2)),  "sigma":Parameter(0.08,(0.01,.15)), "lifetime":Parameter(80,(0.8*80,1.2*80)), "lifetime0":Parameter(80,None)}
+pars["bkg"] = {"number":Parameter(2500, None)} # (2000,10000))}
 #UnRestricted
 #pars = {}
 #pars["peak0"] = {"number":Parameter(2250,(0,5000)), "mean":Parameter(8.9,(8.5,9.1)), "sigma":Parameter(0.25,(0.10,1))}
@@ -254,6 +254,9 @@ lch.hist(data[1],bins=200,range=(0,1238),alpha=0.2)
 #plt.show()
 
 #exit()
+
+# Need to look at this to see about projecting out 1-d parts
+# http://roofit.sourceforge.net/docs/tutorial/plot/roofit_tutorial_plot.pdf
 
 plt.subplot(1,2,1)
 ytot = np.zeros_like(xpts0)
